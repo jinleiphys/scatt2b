@@ -2,6 +2,7 @@
       use input
       use channels 
       use scattwf
+      use wkb
       implicit none 
       
       ! reading in the parameters 
@@ -15,6 +16,8 @@
       
       ! solve the scattering problem 
       call scatt2b()
+      
+      call wkbwf()
       
       ! list the output informations
       call fkind()

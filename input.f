@@ -110,7 +110,7 @@ c***print reaction systems
       write(*,100) namep,massp,zp,jp
 100   format('Project=',A5,' MASS = ',F7.4,' Z = ',F5.1, ' Jp = ',f4.1)
 
-      write(*,110),namet,masst,zt,jt
+      write(*,110)namet,masst,zt,jt
 110   format('Target =',A5,' MASS = ',F7.4,' Z = ',F5.1, ' Jt = ',f4.1)
 
       write(*,150)

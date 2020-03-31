@@ -1,4 +1,4 @@
-OBJ= precision.o  constants.o systems.o channels.o mesh.o pot.o input.o   coul90.o gauss.o interpolation.o  lagrange_mesh.o scattwf.o scattering.o 
+OBJ= precision.o  constants.o systems.o channels.o mesh.o interpolation.o pot.o input.o   coul90.o gauss.o   lagrange_mesh.o scattwf.o wkb.o scattering.o 
 
 
 # Laptop

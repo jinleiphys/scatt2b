@@ -80,15 +80,15 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
        
        
        ! test lagrange mesh
-       call initial_lagrange_func(rmax-hcm*2.)
-       call T_and_Bloch(mu)
+C      call initial_lagrange_func(rmax-hcm*2.)
+C      call T_and_Bloch(mu)
        ! 
 
        ! check the step size 
        if (k*hcm>0.2)  then
          write(*,*) 'warning!please decrease the value of hcm,',
      +     'it should be smaller than ', 0.2/k
-         stop
+C        stop
        end if
 
        ! compute the Coulomb/Bessel function used for matching 
@@ -362,8 +362,8 @@ c----------------------------------------------------------------------
       
       do ith=1,nth
         theta=thmin+ thinc*(ith-1)
-        pl(0,i) = 1.0_dpreal
-        pl(1,i) = cos(theta)
+        pl(0,ith) = 1.0_dpreal
+        pl(1,ith) = cos(theta)
         do l=2,lmax
           pl(l,ith)=dble(2.*l-1.)/dble(l)*cos(theta)*pl(l-1,ith)-dble(l-1.)/dble(l)*pl(l-2,ith)
         end do

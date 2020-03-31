@@ -19,6 +19,7 @@ C     implicit none
        real*8  :: a1,a2    ! mass for radius conversion
        real*8  :: rc ! for coulomb potential
        integer :: ptype ! select potential type
+       real*8, allocatable,dimension(:) :: rvec
 
       contains
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -36,6 +37,8 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
        real*8 :: z12  ! For Coulomb potential
        real*8 ::ls !l*s
        integer :: ir
+       real*8, dimension(0:irmatch) :: vr,vi
+       character*40 filename
 
        vc=0.0d0;vcou=0.0d0;vls=0.0d0;vsur=0.0d0
        wsv=0.0d0;wsw=0.0d0;vcou=0.0d0;vlsv=0.0d0;vlsw=0.0d0
@@ -54,6 +57,28 @@ c-----------------------------------------------------------------------
 c       stop
        end if
 c-----------------------------------------------------------------------
+
+
+
+c-----------------------------------------------------------------------
+       if (ptype==41) then !read external potentials
+c-----------------------------------------------------------------------
+         if (allocated(rvec)) deallocate(rvec)
+         allocate(rvec(0:irmatch))    !!! 0 or 1  ??
+         do ir=0, irmatch
+          rvec(ir)=ir*hcm
+         end do
+         filename='fort.41'
+         call extpot(filename,vr,vi,irmatch)
+         do ir=0,irmatch
+           v(ir)=cmplx(uv*vr(ir),uw*vi(ir),kind=8)
+         end do
+       end if 
+c-----------------------------------------------------------------------
+
+
+
+
 c      calculate the potential
        do ir=1,irmatch
        r=ir*hcm
@@ -101,15 +126,20 @@ c-----------------------------------------------------------------------
        case(3)
 c-----------------------------------------------------------------------
        vc=MT(r)
+       
+c-----------------------------------------------------------------------
+       case(41) !read potential
+c-----------------------------------------------------------------------
+       vcou=vcoul(r,z12,rc*a13)
        end select
 
-       v(ir)=vc+vcou+vls+vsur
+       v(ir)=vc+vcou+vls+vsur+v(ir)
 
        end do
 
 
        
-       do ir=0,irmatch
+       do ir=1,irmatch
           write(30,*) ir*hcm,real(v(ir)),aimag(v(ir))
        end do
        write(30,*) "&"
@@ -245,4 +275,71 @@ c** Malfliet-Tjon potential
        end function
 
 c-----------------------------------------------------------------------
+c Read external potential
+c Format:
+c 1st line: header
+c 2nd line: npoints, rstep, rfirst
+c Next lines: real, imag
+      subroutine extpot(filename,vr,vi,nr)
+        use interpolation
+        implicit none
+        logical uu
+        integer npt,n,nr
+        real*8 vr(0:nr),vi(0:nr)
+        integer,parameter:: kpot=50
+        character*40 filename,header
+        real*8:: r,rstep,rfirst,x,y1,y2
+        real*8,allocatable::xv(:),faux(:),haux(:)
+        real*8,parameter:: alpha=0
+
+        uu = .false.
+        inquire(file=filename,exist=uu)
+        if (.not.uu) then
+          write(0,*) 'Potential file:', filename,' not found!'
+          stop
+        endif
+        write(*,'(8x, "Potential file:",a20)') filename
+        open(kpot,file=filename,status='old')
+        rewind(kpot)
+        read(kpot,*) header
+        npt=0
+20      read(kpot,*,end=200) x,y1,y2
+        npt=npt+1
+        goto 20
+
+200     if (npt.lt.1) goto 300
+        rewind(kpot)
+
+        read(kpot,*) header
+        read(kpot,*) npt,rstep,rfirst
+        allocate(faux(npt),haux(npt),xv(npt))
+        faux(:)=0; haux(:)=0; xv(:)=0
+        do n=1,npt
+           read(kpot,*,err=300)  y1,y2
+           xv(n)=rfirst+rstep*(n-1)
+           faux(n)=y1
+           haux(n)=y2
+        enddo
+
+      write(*,'(3x,"=> read:",i3," points")') npt
+      write(*,250) xv(1),xv(npt),xv(2)-xv(1)
+250   format(/,5x,"[Radial grid: Rmin=",1f7.3," fm,",
+     &      " Rmax=",1f7.1," fm,"
+     &      " Step=",1f7.3," fm]",/)
+
+        do n=0,nr
+          r=rvec(n)
+          vr(n)=fival(r,xv,faux,npt,alpha)
+          vi(n)=fival(r,xv,haux,npt,alpha)
+        enddo
+
+        deallocate(xv,faux,haux)
+        return
+300     write(*,*)'error reading ext. potential !'
+        stop
+        return
+      end subroutine
+
+
+
       end module
