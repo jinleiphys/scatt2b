@@ -17,7 +17,7 @@
       ! solve the scattering problem 
       call scatt2b()
       
-      call wkbwf()
+C     call wkbwf()
       
       ! list the output informations
       call fkind()

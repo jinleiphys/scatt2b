@@ -60,7 +60,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
        real*8 :: ls ! ls=0.5_dpreal*(j*(j+1)-l*(l+1)-s*(s+1))
        complex*16,dimension(1:5) :: wfmatch ! 5 points to match the Coulomb/Bessel function
        complex*16,dimension(:,:),allocatable :: Upot ! potential used for calculations
-      
+       complex*16, dimension(0:lmax) ::  smat 
        
 
        if(allocated(wf)) deallocate(wf) ! deallocate the wave function
@@ -123,7 +123,7 @@ C         call sch_numerov(r0,mu,ecm,Upot(0:irmatch,nch),l,wf(:,nch))
           ! matching the boundary conditions
           wfmatch(1:5)=wf(irmatch-4:irmatch,nch)
           call matching(l,k,wfmatch,sl,nl)
-
+          smat(l)=sl
           ! compute the phase-shift
           write(2,*) l, 0.5_dpreal*log(sl)/iu, real(0.5_dpreal*log(sl)/iu) * 180.0_dpreal /pi
           ! renormalize the wave function
@@ -138,37 +138,71 @@ C         call R_matrix(l,mu,ecm,Upot,cph(l),ngc(l),ngcp(l),nfc(l),nfcp(l))
 
        end do
 
+       call plcos()
+       call angular_distribution(cph,smat,k,eta)
+       call plotwfxz()
        write(*,150)
 150   format('********************************************************')
 
       end subroutine
 c-----------------------------------------------------------------------
-      subroutine angular_distribution(cph,smat, dsdw)
-      use mesh 
-      use precision
-      use channels
-      implicit none 
-      complex*16, dimension(0:lmax) :: cph, smat 
-      integer :: l 
-      real*8,dimension(1:nth) :: dsdw
-      integer :: ith 
-      complex*16 ::  fc, fn 
-      real*8 :: theta
-      
-      do ith=1, nth 
-      
-      
-      
-      
-      end do 
-      
-      
-      
-      
-      end subroutine 
-      
-      
+      subroutine plotwfxz()
+c     plot the |\chi(\vec{r})| in xz plane 
+       use mesh
+       use channels
+       ! channel index
+       use precision 
+       use constants
+       use interpolation
+       use systems,only:zp,massp,zt,masst,elab
+       !  projectile mass number and charge number: massp, zp 
+       !  the target mass number and charge number: masst, zt
+       !  incoming energy in lab frame : unit in MeV 
+       implicit none 
+       complex*16,allocatable,dimension(:,:) :: sumwf
+       integer :: ith,ir,l,nch, ix , iz , nxmax
+       real*8 :: x,z,theta,r,k,mu,ecm
 
+       ecm=elab*masst/(massp+masst) ! compute the energy in C.M. frame (MeV)
+       mu=amu*(masst*massp)/(massp+masst) ! reduced mass  (MeV)
+       k=sqrt(2.*mu*ecm/(hbarc**2)) ! wavenumber (fm^{-1})
+       nxmax=nint(irmatch/2.)
+       allocate(sumwf(-nxmax:nxmax,-nxmax:nxmax))
+       sumwf=0.0_dpreal
+      do ix=-nxmax, nxmax
+         x=ix*hcm
+         do iz=-nxmax, nxmax
+            z=iz*hcm
+            r=sqrt(x**2 + z**2)
+            theta=acos(z/r)
+            do nch=1,alpha2b%nchmax
+               l=alpha2b%l(nch)
+c               sumwf=sumwf+ 2. * sqrt(pi*(2.*l+1.))* iu**l * wf(ir,nch) * pl(l,ith) / k / r
+               sumwf(iz,ix)=sumwf(iz,ix)+ 2. * sqrt(pi*(2.*l+1.))* iu**l * FFC(r/hcm,wf(:,nch),irmatch+1) * 
+     &          FFR4((theta*180./pi-thmin)/thinc,pl(l,:),nth) / k / r
+
+            end do           
+         end do 
+      end do 
+
+      do iz=-nxmax,nxmax
+      !      write(765,*)( abs(sumwf(iz,ix)),ix=-nxmax,nxmax)
+           write(766,*) iz*hcm
+           do ix=-nxmax, nxmax
+             write(769,*) iz*hcm, ix*hcm ,abs(sumwf(iz,ix))
+           end do 
+      end do 
+
+
+
+
+
+
+
+
+
+
+      end subroutine
 
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -254,7 +288,8 @@ c      Numerov method to solve the differential radial equation
        rwfl(r0)=0      ! boundary condition
        
        rwfl(r0+1)=hcm**(l+1)  ! arbitrary value 
-       
+       if(l>140) rwfl(r0+1)=0.0000000001
+
        ir=r0+1; r=ir*hcm
        kl(ir)=2.*mu*ecm/hbarc**2-l*(l+1)/r**2-2.*mu*Vpot(ir)/hbarc**2
        
@@ -356,21 +391,67 @@ c----------------------------------------------------------------------
       implicit none 
       integer ::  ith, l  
       real*8 :: theta
+
+      
       
       if (.not. allocated(pl)) allocate( pl(0:lmax,1:nth) )
       pl=0.0_dpreal
-      
+
       do ith=1,nth
         theta=thmin+ thinc*(ith-1)
         pl(0,ith) = 1.0_dpreal
-        pl(1,ith) = cos(theta)
+        pl(1,ith) = cos(theta*pi/180.)
         do l=2,lmax
-          pl(l,ith)=dble(2.*l-1.)/dble(l)*cos(theta)*pl(l-1,ith)-dble(l-1.)/dble(l)*pl(l-2,ith)
+          pl(l,ith)=dble(2.*l-1.)/dble(l)*cos(theta*pi/180.)*pl(l-1,ith)-dble(l-1.)/dble(l)*pl(l-2,ith)
         end do
       end do       
       
       end subroutine 
 
 
+
+c-----------------------------------------------------------------------
+      subroutine angular_distribution(cph,smat,k,eta)
+      use mesh 
+      use precision
+      use channels
+      use systems
+      implicit none 
+      complex*16, dimension(0:lmax) ::  smat 
+      real*8,dimension(0:lmax) :: cph
+      integer :: l 
+      real*8 :: dsdw, dsdw_Ruth
+      integer :: ith 
+      complex*16 ::  fc, fn , f
+      real*8 :: theta,k,eta,theta_radian, sin2theta
+ 
+
+    
+      do ith=1, nth 
+         theta=thmin+ thinc*(ith-1)
+         theta_radian= theta* pi / 180.
+         sin2theta = sin( 0.5*theta_radian )**2 
+         fc=-eta * exp( -iu*eta*log(sin2theta) + 2*iu*cph(0) ) / ( 2.0_dpreal*k*sin2theta ) 
+         
+         fn=0.0_dpreal
+         do l=0, lmax
+           fn=fn + (2.*l+1.)*exp(2*iu*cph(l))*(smat(l)-1.)*pl(l,ith) / (2.*iu*k)
+         end do 
+         f= fc+fn
+         dsdw= abs(f) ** 2 * 10 
+         dsdw_Ruth = eta**2 * 10 / (4 * k**2 * sin2theta**2 ) 
+          write(199,*) theta, dsdw, dsdw_Ruth
+         if(abs(eta) > 1e-6) dsdw = dsdw/dsdw_Ruth 
+         
+         write(99,*) theta, dsdw
+      end do 
+      
+      
+      
+      
+
+  
+      end subroutine 
+c--------------------------------------------------------------------------      
 
       end module

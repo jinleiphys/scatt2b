@@ -22,7 +22,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       implicit none
 
 
-      namelist /global/ hcm,rmatch,lmax,elab,lmin,nr
+      namelist /global/ hcm,rmatch,lmax,elab,lmin,nr,thmin, thmax,thinc
 
       namelist /system/ namep,massp,zp,jp,namet,masst,zt,jt
 
@@ -41,9 +41,11 @@ c /global/
        lmax=30;elab=10.0_dpreal
        lmin=0
        nr=80
+       thmin=0.1_dpreal;thmax=180.1_dpreal;thinc=1.0_dpreal
        read(5,nml=global)
        irmatch=nint(rmatch/hcm)
        rmax=rmatch
+       nth=nint((thmax-thmin)/thinc)
 c-----------------------------------------------------------------------
 c/system/
        namep='null';massp=0.0d0;zp=0.0d0;jp=0.0d0

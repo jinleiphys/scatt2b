@@ -1,13 +1,16 @@
 NAMELIST
-&GLOBAL      hcm=0.01 rmatch=20  lmin=0 lmax=4  elab=160  nr=20 /
+&GLOBAL      hcm=0.05 rmatch=80  lmin=0 lmax=240  elab=140  nr=40
+thmin=0.1 thmax=179.9 thinc=1.0
+
+ /
 
 ! hcm: step for solving the differential equations using Numerov
 ! rmatch : matching radius 
 ! lmax : maximum angular momentum 
 ! elab : lab energy                          
 
-&SYSTEM      namep='14N'     massp=1    zp=0.0   jp=0.0  
-            namet='208Pb'    masst=208   zt=1.0    jt=0.0     /
+&SYSTEM      namep='11Be'     massp=11   zp=4.0   jp=0.0  
+            namet='Ni78'      masst=208     zt=82   jt=0.0     /
 
 ! namep(t) : name of projectile(target)
 ! massp(t) : mass number of projectile(target)
@@ -17,9 +20,11 @@ NAMELIST
 
         
 
-&POTENTIAL ptype=1 a1=0 a2=208 rc=1.3
-            uv=77.3 av=0.77 rv=1.15 /
+&POTENTIAL ptype=41 a1=14 a2=208 rc=1.3
+            uv=1.0 uw=1.0    
+            wd=14.398857   awd=2.082576 rwd=1.2 /
 
+14.398857  1.2  2.082576 
 ! ptype=1 : Wood-Saxon
 ! ptype=2 : Gaussian 
 ! ptype=3 : Malfliet-Tjon
