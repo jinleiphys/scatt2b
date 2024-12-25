@@ -157,9 +157,9 @@ c***********************************************************************
        integer :: ir,INFO,NRHS
        integer,dimension(1:nr) :: IPIV
        real*8 :: N
-       complex*16 ::  Rmatrix , Zmatrix , Smatrix
+       complex*16 ::  Rmatrix , Zmatrix_O, Zmatrix_I, Smatrix
        complex*16 :: hc ,hc1 !H(+), H(-)
-       complex*16 :: hcp ! derivatives of H(+)
+       complex*16 :: hcp,hcp1 ! derivatives of H(+),H(-)
        complex*16,dimension(1:nr) :: scattwf 
        complex*16 :: wf_bound
        real*8 ::  cph
@@ -169,6 +169,7 @@ c***********************************************************************
        hc=cmplx(gc,fc,kind=8)   
        hc1=cmplx(gc,-fc,kind=8)
        hcp=cmplx(gcp,fcp,kind=8)
+       hcp1=cmplx(gcp,-fcp,kind=8)
 
        
        call lagrange_V(Vpot)
@@ -200,12 +201,12 @@ c***********************************************************************
        end do 
 
        Rmatrix=Rmatrix * N
-       Zmatrix= (hc-k*rmax_rmatrix*Rmatrix*hcp) / (k*rmax_rmatrix)
-       
-       Smatrix= CONJG(Zmatrix) / Zmatrix
+       Zmatrix_O= (hc-k*rmax_rmatrix*Rmatrix*hcp) / (k*rmax_rmatrix)
+       Zmatrix_I= (hc1-k*rmax_rmatrix*Rmatrix*hcp1) / (k*rmax_rmatrix)
+       Smatrix= Zmatrix_I / Zmatrix_O
        
        write(*,*) "Smatrix=", Smatrix, 0.5_dpreal*log(Smatrix)/iu
-       write(*,*) "phase=",real(0.5_dpreal*log(Smatrix)/iu) * 180.0_dpreal /pi
+C      write(*,*) "phase=",real(0.5_dpreal*log(Smatrix)/iu) * 180.0_dpreal /pi
        
        
        ! compute the scattering wave function  ! still testing 
@@ -215,7 +216,7 @@ c***********************************************************************
        
         scattwf(ir)=lagrange_func(ir)*X_vector(ir)*wf_bound *N / Rmatrix  
        
-       write(99,*) mesh_rr(ir)* rmax_rmatrix , real(scattwf(ir)), aimag(scattwf(ir))
+       write(98,*) mesh_rr(ir)* rmax_rmatrix , real(scattwf(ir)), aimag(scattwf(ir))
        end do 
        
        

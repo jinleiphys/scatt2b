@@ -1,5 +1,5 @@
 NAMELIST
-&GLOBAL      hcm=0.05 rmatch=80  lmin=0 lmax=240  elab=140  nr=40
+&GLOBAL      hcm=0.05 rmatch=40  lmin=0 lmax=0  elab=11  nr=80
 thmin=0.1 thmax=179.9 thinc=1.0
 
  /
@@ -9,8 +9,8 @@ thmin=0.1 thmax=179.9 thinc=1.0
 ! lmax : maximum angular momentum 
 ! elab : lab energy                          
 
-&SYSTEM      namep='11Be'     massp=11   zp=4.0   jp=0.0  
-            namet='Ni78'      masst=208     zt=82   jt=0.0     /
+&SYSTEM      namep='p'     massp=1   zp=1.0   jp=0.0  
+            namet='Ni78'      masst=78     zt=28   jt=0.0     /
 
 ! namep(t) : name of projectile(target)
 ! massp(t) : mass number of projectile(target)
@@ -20,9 +20,9 @@ thmin=0.1 thmax=179.9 thinc=1.0
 
         
 
-&POTENTIAL ptype=41 a1=14 a2=208 rc=1.3
-            uv=1.0 uw=1.0    
-            wd=14.398857   awd=2.082576 rwd=1.2 /
+&POTENTIAL ptype=1 a1=1 a2=78 rc=1.2
+            uv=40  av=0.65 rv=1.2 
+            uw=10  aw=0.5 rw=1.2 /
 
 14.398857  1.2  2.082576 
 ! ptype=1 : Wood-Saxon

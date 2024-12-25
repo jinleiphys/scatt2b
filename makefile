@@ -1,12 +1,12 @@
-OBJ= precision.o  constants.o systems.o channels.o mesh.o interpolation.o pot.o input.o   coul90.o gauss.o   lagrange_mesh.o scattwf.o wkb.o scattering.o 
+OBJ= precision.o  constants.o systems.o channels.o mesh.o interpolation.o pot.o input.o  pyplot_module.o coul90.o gauss.o   lagrange_mesh.o scattwf.o wkb.o scattering.o
 
 
 # Laptop
  LIB =-L  /opt/local/lib -llapack
-#LIB = -L ../lapack-3.5.0 -lrefblas -llapack  
-FC = gfortran 
+#LIB = -L ../lapack-3.5.0 -lrefblas -llapack
+FC = gfortran
 F90 = gfortran
-FFLAGS = -O2 -Wtabs   -ffixed-line-length-0  
+FFLAGS = -O2 -Wtabs   -ffixed-line-length-0
 
 .SUFFIXES: .F90 .f90 .f95
 
@@ -22,6 +22,9 @@ scattering:  $(OBJ)
 .F90.o          :
 	$(F90) $(FFLAGS) -c $<
 
+.f90.o          :
+		$(F90) $(FFLAGS) -c $<
+
 .f95.o          :
 	$(F90) $(FFLAGS) -c $<
 
@@ -32,7 +35,5 @@ scattering:  $(OBJ)
 	$(F90) $(FFLAGS) -c $<
 
 
-clean: 
+clean:
 	rm -f upot $(objectsbound) $(objectsscatt) *.mod core *.o scattering
-
-
